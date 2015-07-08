@@ -6,7 +6,7 @@ int count = 0;
 
 void
 handle_alarm(void) {
-	printf("\x1b[s\x1b[K");
+    printf("\x1b[s\x1b[K");
     printf("\tAlarm \x1b[31;1m%d\x1b[0m\n", ++count);
     printf("\x1b[u");
 }
