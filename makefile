@@ -15,10 +15,8 @@ CC=gcc
 CFLAGS=-Wall `pkg-config --cflags $(DEP_PACKAGE)`
 LIBS=`pkg-config --libs $(DEP_PACKAGE)` -pthread
 COMPILE=$(CC) $(INCLUDES) $(CFLAGS) -c
-OUTPUT_OPTION=-o $@
 
 BIN_DIR=bin
-TEST_DIR=tests
 SOURCES= \
 	main.c weather_backend.c \
 	timer_thread.c json_util.c \
@@ -41,7 +39,6 @@ all: $(BIN)
 
 $(BIN): $(OBJECTS)
 	$(CC) $^ -o $@ $(LIBS)
-	$(setup-bin)
 	$(perform_post_build)
 
 main.o: main.c
