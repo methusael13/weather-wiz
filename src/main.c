@@ -180,8 +180,11 @@ app_activate_indicator(void) {
     GtkMenu *menu;
     menu = GTK_MENU(gtk_ui_manager_get_widget(global_ui_man, "/ui/IndicatorPopup"));
     app_initiate_indicator(menu, &global_app_ind);
-    LOG_INFO("Indicator initiated!");
 
+    g_object_unref(ac_grp);
+    g_object_unref(menu);
+
+    LOG_INFO("Indicator initiated!");
     return TRUE;
     err:
         return FALSE;
