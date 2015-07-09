@@ -35,8 +35,8 @@ SOFTWARE.
 #include <sys/stat.h>
 
 #define _REQUIRE_MEM_PERMISSIONS_
-#include "include/util.h"
-#include "include/event_log.h"
+#include "util.h"
+#include "event_log.h"
 
 int8_t
 file_exists_readable(const char *fpath) {

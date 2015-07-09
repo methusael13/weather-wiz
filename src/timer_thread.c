@@ -30,7 +30,7 @@ SOFTWARE.
 #include <unistd.h>
 #include <string.h>
 #include <sys/time.h>
-#include "include/timer_thread.h"
+#include "timer_thread.h"
 
 TimerThread *local_timer;
 pthread_mutex_t mutex_lock;

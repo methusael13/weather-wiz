@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <unistd.h>
-#include "../src/include/timer_thread.h"
+#include "timer_thread.h"
 
 int count = 0;
 

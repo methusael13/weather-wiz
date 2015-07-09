@@ -31,13 +31,13 @@ SOFTWARE.
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
-#include "include/util.h"
-#include "include/event_log.h"
-#include "include/timer_thread.h"
-#include "include/json_util.h"
+#include "util.h"
+#include "event_log.h"
+#include "timer_thread.h"
+#include "json_util.h"
 
 #define _REQUIRE_WEATHER_DEFINITIONS_
-#include "include/weather_backend.h"
+#include "weather_backend.h"
 
 #define REQUEST_INTERVAL 3600
 

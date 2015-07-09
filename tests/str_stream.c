@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include "../src/include/util.h"
+#include "util.h"
 
 int
 main(int argc, char *argv[]) {

@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <unistd.h>
 #define _REQUIRE_W_STATUS_STR_
-#include "../src/include/weather_backend.h"
+#include "weather_backend.h"
 
 int should_exit = 0;
 

@@ -27,9 +27,9 @@ SOFTWARE.
 */
 
 #include <string.h>
-#include "include/event_log.h"
-#include "include/json_util.h"
-#include "include/util.h"
+#include "event_log.h"
+#include "json_util.h"
+#include "util.h"
 
 /* Helper macros */
 #define CHECK_REF_PARAM(r, k, d, e) \

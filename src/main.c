@@ -29,9 +29,9 @@ SOFTWARE.
 /* TODO: Port to GTK-3.0 */
 #include <assert.h>
 #include <string.h>
-#include "include/main.h"
-#include "include/event_log.h"
-#include "include/weather_backend.h"
+#include "main.h"
+#include "event_log.h"
+#include "weather_backend.h"
 
 _BEGIN_ICON_SET_DECL
     APP_ICON_W_CLEAR, APP_ICON_W_CLEAR_NT,
