@@ -17,7 +17,7 @@ If you still want to check it out, read the build instructions below.
 * libappindicator-dev
 
 Some of these packages already come pre-installed in some Linux distros,
-others can be installed from your distribution repositories.
+others can be installed from the distribution repositories.
 
 ####Building
 Make sure you have the prerequisites mentioned above.
