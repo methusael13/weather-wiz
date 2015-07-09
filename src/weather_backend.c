@@ -47,8 +47,20 @@ SOFTWARE.
 #define PATH_FORMAT "%s/.cache/%s"
 #define LOC_URL_FORMAT \
     "http://api.wunderground.com/api/%s/geolookup/q/autoip.json"
-#define WEATHER_URL_FORMAT \
+#define WEATHER_URL_FORMAT_CC \
     "http://api.wunderground.com/api/%s/geolookup/conditions/q/%s/%s.json"
+#define WEATHER_URL_FORMAT_ZMW \
+    "http://api.wunderground.com/api/%s/geolookup/conditions/q/zmw:%s.json"
+
+#define W_BUILD_LOCATION_URL(str, auth_key) \
+    do { snprintf(str, sizeof(str), LOC_URL_FORMAT, auth_key); } \
+    while (0);
+#define W_BUILD_WEATHER_URL_CC(str, auth_key, country, city) \
+    do { snprintf(str, sizeof(str), WEATHER_URL_FORMAT_CC, auth_key, country, city); } \
+    while (0);
+#define W_BUILD_WEATHER_URL_ZMW(str, auth_key, zmw) \
+    do { snprintf(str, sizeof(str), WEATHER_URL_FORMAT_ZMW, auth_key, zmw); } \
+    while (0);
 
 #define INIT_LOC_FILE_PATH(str, home) \
     do { snprintf(str, sizeof(str), PATH_FORMAT, home, TEMP_LOC_FILE); } \
@@ -77,18 +89,11 @@ const char *usr_home;
 /* Keep this safe, lest it fall in the hands of the evil */
 const char *AUTH_KEY  = "208c2e7af8134895";
 
+TimerThread *timer;
 WeatherConditions wc;
-GeoIPLocation geo_loc;
-TimerThread *timer = NULL;
+GeoIPLocation geo_loc = { .use_zmw = FALSE };
 
 void (*weather_update_callback)(GeoIPLocation *, WeatherConditions *);
-
-#define W_BUILD_LOCATION_URL(str, auth_key) \
-    do { snprintf(str, sizeof(str), LOC_URL_FORMAT, auth_key); } \
-    while (0);
-#define W_BUILD_WEATHER_URL(str, auth_key, country, city) \
-    do { snprintf(str, sizeof(str), WEATHER_URL_FORMAT, auth_key, country, city); } \
-    while (0);
 
 struct response_data {
     int16_t cursor;
@@ -186,16 +191,47 @@ w_init_geoip_loc(GeoIPLocation *geo) {
         return FALSE;
     }
 
-    if (online)
+    // Update location info
+    if (online) {
         parse_location_json_data(geoip_text, geo);
+
+        // Determine whether to use zmw
+        // Try first with default weather url
+        W_BUILD_WEATHER_URL_CC(weather_url, AUTH_KEY,
+            geo->country, geo->city);
+        if (w_request(weather_url, weather_text)) {
+#define SUPPRESS_LOG
+            if (!parse_weather_json_data(weather_text, &wc)) {
+                // Unable to parse response json
+                // Should have zmw data
+                json_t *root, *res;
+                json_error_t j_error;
+
+                root = json_loads(weather_text, 0, &j_error);
+                res = json_get_leaf_object(root, "response.results");
+
+                if (json_is_array(res))
+                    res = json_array_get(res, 0);
+                json_load_data_string(res, "zmw", geo->zmw, sizeof geo->zmw);
+                geo->use_zmw = TRUE;
+                json_decref(root);
+            }
+#undef SUPPRESS_LOG
+        }
+    }
     W_SET_LOC_DATA_AVAILABLE(TRUE);
     return TRUE;
 }
 
 static int
 w_load_weather_data_online(WeatherConditions *wc) {
-    W_BUILD_WEATHER_URL(weather_url, AUTH_KEY,
-        geo_loc.country, geo_loc.city);
+    if (geo_loc.use_zmw) {
+        W_BUILD_WEATHER_URL_ZMW(weather_url, AUTH_KEY, geo_loc.zmw);
+    } else {
+        W_BUILD_WEATHER_URL_CC(weather_url, AUTH_KEY,
+            geo_loc.country, geo_loc.city);
+    }
+
     if (w_request(weather_url, weather_text)) {
         parse_weather_json_data(weather_text, wc);
         W_SET_WEATR_DATA_AVAILABLE(TRUE);
@@ -318,37 +354,37 @@ parse_weather_json_data(const char *str, WeatherConditions *wc) {
     }
 
     status = json_load_data_to_string(root,
-        "current_observation.temp_f", wc->temp_f, sizeof(wc->temp_f));
+        "current_observation.temp_f", wc->temp_f, sizeof wc->temp_f);
     CHECK_REF(status, err);
 
     status = json_load_data_to_string(root,
-        "current_observation.temp_c", wc->temp_c, sizeof(wc->temp_c));
+        "current_observation.temp_c", wc->temp_c, sizeof wc->temp_c);
     CHECK_REF(status, err);
 
     status = json_load_data_to_string(root,
         "current_observation.relative_humidity",
-        wc->rel_humidity, sizeof(wc->rel_humidity));
+        wc->rel_humidity, sizeof wc->rel_humidity);
     CHECK_REF(status, err);
 
     status = json_load_data_to_string(root,
-        "current_observation.wind_mph", wc->wind_mph, sizeof(wc->wind_mph));
+        "current_observation.wind_mph", wc->wind_mph, sizeof wc->wind_mph);
     CHECK_REF(status, err);
 
     status = json_load_data_to_string(root,
-        "current_observation.wind_kph", wc->wind_kph, sizeof(wc->wind_kph));
+        "current_observation.wind_kph", wc->wind_kph, sizeof wc->wind_kph);
     CHECK_REF(status, err);
 
     status = json_load_data_to_string(root,
         "current_observation.pressure_mb",
-        wc->pressure_mb, sizeof(wc->pressure_mb));
+        wc->pressure_mb, sizeof wc->pressure_mb);
     CHECK_REF(status, err);
 
     status = json_load_data_string(root,
-        "current_observation.wind_dir", wc->wind_dir, sizeof(wc->wind_dir));
+        "current_observation.wind_dir", wc->wind_dir, sizeof wc->wind_dir);
     CHECK_REF(status, err);
 
     status = json_load_data_string(root, "current_observation.weather",
-        wc->weather_str, sizeof(wc->weather_str));
+        wc->weather_str, sizeof wc->weather_str);
     CHECK_REF(status, err);
 
 #ifdef _REQUIRE_WEATHER_DEFINITIONS_
@@ -369,7 +405,9 @@ parse_weather_json_data(const char *str, WeatherConditions *wc) {
     return TRUE;
 
     err:
+#ifndef SUPPRESS_LOG
         LOG_ERROR("Malformed json text. Unable to parse data");
+#endif
         json_decref(root);
         return FALSE;
 }
@@ -387,15 +425,15 @@ parse_location_json_data(const char *str, GeoIPLocation *loc) {
     }
 
     status = json_load_data_string(root, "location.country_name",
-        loc->country, sizeof(loc->country));
+        loc->country, sizeof loc->country);
     CHECK_REF(status, err);
 
     status = json_load_data_string(root, "location.state",
-        loc->state, sizeof(loc->state));
+        loc->state, sizeof loc->state);
     CHECK_REF(status, err);
 
     status = json_load_data_string(root, "location.city",
-        loc->city, sizeof(loc->city));
+        loc->city, sizeof loc->city);
     CHECK_REF(status, err);
 
     json_decref(root);
@@ -423,6 +461,6 @@ w_weather_get_displayable(WeatherDisplayable *wd, GeoIPLocation *loc,
     WD_ITEM(wd->wind_mph_d, "Wind: %s mph %s", wc->wind_mph, wc->wind_dir);
     WD_ITEM(wd->wind_kph_d, "Wind: %s kph %s", wc->wind_kph, wc->wind_dir);
     WD_ITEM(wd->pressure_mb_d, "Pressure: %s mb", wc->pressure_mb);
-    strncpy(wd->weather_d, wc->weather_str, sizeof(wd->weather_d));
+    strncpy(wd->weather_d, wc->weather_str, sizeof wd->weather_d);
 }
 #undef WD_ITEM

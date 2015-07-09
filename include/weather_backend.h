@@ -85,13 +85,16 @@ typedef enum W_STATUS {
 
 /* Size definitions for GeoIP and WeatherCond structs */
 #define W_LOC_STR_SIZE 30
+#define W_LOC_ZMW_SIZE 20
 #define W_WIND_DIR_STR_SIZE 10
 #define W_WEATHER_STR_SIZE 40
 
 typedef struct GeoIPLoc {
+    int  use_zmw;
     char city[W_LOC_STR_SIZE];
     char state[W_LOC_STR_SIZE];
     char country[W_LOC_STR_SIZE];
+    char zmw[W_LOC_ZMW_SIZE];
 } GeoIPLocation;
 
 #define W_NUMBER_STR_SIZE 6
