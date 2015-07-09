@@ -24,9 +24,9 @@ Make sure you have the prerequisites mentioned above.
 Once you've downloaded the zip, open a terminal and `cd` to the directory
 the zip file is located in and enter the following:
 ```
-`unzip weather-wiz-master`
-`cd weather-wiz-master`
-`make`
+unzip weather-wiz-master
+cd weather-wiz-master
+make
 ```
 This will create the necessary binary `weather-wiz` in the `bin` directory.
 You can excecute it like any normal executable (through GUI or the terminal).
