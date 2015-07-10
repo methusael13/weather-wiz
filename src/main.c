@@ -84,7 +84,9 @@ _BEGIN_ARR_DECL(weather_info_actions, const GtkActionEntry)
 _END_ARR_DECL
 
 static void
-app_update_weather_states(GtkActionGroup *group, WeatherDisplayable *wd) {
+app_update_weather_display(GtkActionGroup *group,
+                           WeatherConditions *wc,
+                           WeatherDisplayable *wd) {
     SET_ACT_LABEL(group, "location", wd->location_d);
     SET_ACT_LABEL(group, "weather", wd->weather_d);
     SET_ACT_LABEL(group, "temp_f", wd->temp_f_d);
@@ -98,6 +100,12 @@ app_update_weather_states(GtkActionGroup *group, WeatherDisplayable *wd) {
                          "temp_c", !wd->use_temp_f);
     SET_ACT_VISIBLE_COMBO(group, "wind_mph", wd->use_wind_mph,
                          "wind_kph", !wd->use_wind_mph);
+
+    if (wd->display_label)
+        app_indicator_set_label(global_app_ind, wd->use_temp_f ?
+                                wc->temp_f : wc->temp_c, NULL);
+    else
+        app_indicator_set_label(global_app_ind, NULL, NULL);
 }
 
 static void
@@ -105,7 +113,7 @@ on_weather_update(GeoIPLocation *loc, WeatherConditions *wc) {
     if (!global_app_ind) return;
 
     w_weather_get_displayable(&wd, loc, wc);
-    app_update_weather_states(weather_info_group, &wd);
+    app_update_weather_display(weather_info_group, wc, &wd);
     app_indicator_set_icon_full(global_app_ind,
                                 APP_ICON_SET[wc->weather_id],
                                 wd.weather_d);
