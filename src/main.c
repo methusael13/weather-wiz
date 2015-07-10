@@ -48,8 +48,12 @@ static GtkUIManager *global_ui_man;
 static AppIndicator *global_app_ind;
 static GtkActionGroup *weather_info_group;
 
-static WeatherDisplayable wd;
-static gboolean use_temp_f, use_wind_mph;
+/* Initiate with default settings */
+static WeatherDisplayable wd = {
+    .use_temp_f = FALSE,
+    .use_wind_mph = FALSE,
+    .display_label = TRUE
+};
 
 static void
 app_exit(GtkAction *action, gpointer user_data);
@@ -90,9 +94,10 @@ app_update_weather_states(GtkActionGroup *group, WeatherDisplayable *wd) {
     SET_ACT_LABEL(group, "wind_kph", wd->wind_kph_d);
     SET_ACT_LABEL(group, "pressure_mb", wd->pressure_mb_d);
 
-    SET_ACT_VISIBLE_COMBO(group, "temp_f", use_temp_f, "temp_c", !use_temp_f);
-    SET_ACT_VISIBLE_COMBO(group, "wind_mph", use_wind_mph,
-                         "wind_kph", !use_wind_mph);
+    SET_ACT_VISIBLE_COMBO(group, "temp_f", wd->use_temp_f,
+                         "temp_c", !wd->use_temp_f);
+    SET_ACT_VISIBLE_COMBO(group, "wind_mph", wd->use_wind_mph,
+                         "wind_kph", !wd->use_wind_mph);
 }
 
 static void
@@ -193,10 +198,6 @@ app_activate_indicator(void) {
 int
 main(int argc, char *argv[]) {
     gtk_init(&argc, &argv);
-
-    /* Set some parameters */
-    use_temp_f = FALSE;
-    use_wind_mph = FALSE;
 
     /* Dummy window */
     window =  gtk_window_new(GTK_WINDOW_TOPLEVEL);

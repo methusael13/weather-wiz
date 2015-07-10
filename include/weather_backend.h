@@ -122,6 +122,9 @@ typedef struct WeatherCond {
 #define W_WEATHER_DISP_PRE_SZ 20
 
 typedef struct WeatherD {
+    int use_temp_f;
+    int use_wind_mph;
+    int display_label;
     char location_d[W_WEATHER_DISP_LOC_SZ];
     char temp_f_d[W_WEATHER_DISP_TEMP_SZ];
     char temp_c_d[W_WEATHER_DISP_TEMP_SZ];
