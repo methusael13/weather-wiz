@@ -353,13 +353,18 @@ parse_weather_json_data(const char *str, WeatherConditions *wc) {
         return FALSE;
     }
 
+    char copy[W_TEMP_STR_SIZE];
     status = json_load_data_to_string(root,
         "current_observation.temp_f", wc->temp_f, sizeof wc->temp_f);
     CHECK_REF(status, err);
+    strcpy(copy, wc->temp_f);
+    snprintf(wc->temp_f, sizeof wc->temp_f, "%s%s", copy, FARENHEIT_UNIT_STR);
 
     status = json_load_data_to_string(root,
         "current_observation.temp_c", wc->temp_c, sizeof wc->temp_c);
     CHECK_REF(status, err);
+    strcpy(copy, wc->temp_c);
+    snprintf(wc->temp_c, sizeof wc->temp_c, "%s%s", copy, CELSIUS_UNIT_STR);
 
     status = json_load_data_to_string(root,
         "current_observation.relative_humidity",
@@ -455,8 +460,8 @@ w_weather_get_displayable(WeatherDisplayable *wd, GeoIPLocation *loc,
 
     WD_ITEM(wd->location_d, "%s, %s", loc->city,
         strlen(loc->state) ? loc->state : loc->country);
-    WD_ITEM(wd->temp_f_d, "Temperature: %s °F", wc->temp_f);
-    WD_ITEM(wd->temp_c_d, "Temperature: %s °C", wc->temp_c);
+    WD_ITEM(wd->temp_f_d, "Temperature: %s", wc->temp_f);
+    WD_ITEM(wd->temp_c_d, "Temperature: %s", wc->temp_c);
     WD_ITEM(wd->rel_humidity_d, "Relative Humidity: %s", wc->rel_humidity);
     WD_ITEM(wd->wind_mph_d, "Wind: %s mph %s", wc->wind_mph, wc->wind_dir);
     WD_ITEM(wd->wind_kph_d, "Wind: %s kph %s", wc->wind_kph, wc->wind_dir);

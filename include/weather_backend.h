@@ -83,6 +83,9 @@ typedef enum W_STATUS {
 #define W_STATUS_STR(i) w_status_str[i]
 #endif
 
+#define FARENHEIT_UNIT_STR "°F"
+#define CELSIUS_UNIT_STR "°C"
+
 /* Size definitions for GeoIP and WeatherCond structs */
 #define W_LOC_STR_SIZE 30
 #define W_LOC_ZMW_SIZE 20
@@ -98,10 +101,11 @@ typedef struct GeoIPLoc {
 } GeoIPLocation;
 
 #define W_NUMBER_STR_SIZE 6
+#define W_TEMP_STR_SIZE 9
 
 typedef struct WeatherCond {
-    char temp_f[W_NUMBER_STR_SIZE];
-    char temp_c[W_NUMBER_STR_SIZE];
+    char temp_f[W_TEMP_STR_SIZE];
+    char temp_c[W_TEMP_STR_SIZE];
     char rel_humidity[W_NUMBER_STR_SIZE];
     char wind_mph[W_NUMBER_STR_SIZE];
     char wind_kph[W_NUMBER_STR_SIZE];
