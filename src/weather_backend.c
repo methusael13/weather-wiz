@@ -39,8 +39,11 @@ SOFTWARE.
 #define _REQUIRE_WEATHER_DEFINITIONS_
 #include "weather_backend.h"
 
-#define REQUEST_INTERVAL 3600
+#ifdef _REQUIRE_WEATHER_DEFINITIONS_
+#include <time.h>
+#endif
 
+#define REQUEST_INTERVAL 3600
 #define TEMP_LOC_FILE "w_geo_loc.json"
 #define TEMP_WEATHER_FILE "w_weather_cond.json"
 
@@ -401,8 +404,15 @@ parse_weather_json_data(const char *str, WeatherConditions *wc) {
     icon = bsearch(json_string_value(weather), weather_const_str,
         W_N_ELEMENTS(weather_const_str), sizeof *weather_const_str, w_str_cmp);
 
+    time_t ct = time((time_t *)0);
+    tzset();
+    struct tm loc_time;
+    localtime_r(&ct, &loc_time);
+
     CHECK_COND_OP(icon,
-        wc->weather_id = weather_const_id[(icon - weather_const_str)],
+        wc->weather_id = (loc_time.tm_hour > 6 && loc_time.tm_hour < 18) ?
+        weather_const_id_day[icon - weather_const_str] :
+        weather_const_id_nt[icon - weather_const_str],
         wc->weather_id = WEATHER_UNKNOWN);
 #endif
 

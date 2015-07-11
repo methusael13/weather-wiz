@@ -51,7 +51,7 @@ SOFTWARE.
 #define APP_ICON_W_SNOW "weather-snow"
 #define APP_ICON_W_STORM "weather-storm"
 #define APP_ICON_W_UNKNOWN APP_ICON_W_SEVERE
-#define APP_ICON_DEFAULT "state-offline"
+#define APP_ICON_DEFAULT "indicator-weather"
 
 #define APP_ICON_SET icon_set
 #define _BEGIN_ARR_DECL(arr, type) \

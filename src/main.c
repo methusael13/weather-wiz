@@ -84,8 +84,7 @@ _BEGIN_ARR_DECL(weather_info_actions, const GtkActionEntry)
 _END_ARR_DECL
 
 static void
-app_update_weather_display(GtkActionGroup *group,
-                           WeatherConditions *wc,
+app_update_weather_display(GtkActionGroup *group, WeatherConditions *wc,
                            WeatherDisplayable *wd) {
     SET_ACT_LABEL(group, "location", wd->location_d);
     SET_ACT_LABEL(group, "weather", wd->weather_d);
