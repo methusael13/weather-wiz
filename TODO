@@ -1,0 +1,8 @@
+
+* Port app indicator to GTK3
+* Preferences and About menu-items are currently no-op
+* Include Forecast
+* Notify user on weather update (libnotify)
+* Use customized menuitem to display weather info
+* Alert on severe weather
+

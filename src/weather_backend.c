@@ -473,8 +473,8 @@ w_weather_get_displayable(WeatherDisplayable *wd, GeoIPLocation *loc,
     WD_ITEM(wd->temp_f_d, "Temperature: %s", wc->temp_f);
     WD_ITEM(wd->temp_c_d, "Temperature: %s", wc->temp_c);
     WD_ITEM(wd->rel_humidity_d, "Relative Humidity: %s", wc->rel_humidity);
-    WD_ITEM(wd->wind_mph_d, "Wind: %s mph %s", wc->wind_mph, wc->wind_dir);
-    WD_ITEM(wd->wind_kph_d, "Wind: %s kph %s", wc->wind_kph, wc->wind_dir);
+    WD_ITEM(wd->wind_mph_d, "Wind: %s mi/h %s", wc->wind_mph, wc->wind_dir);
+    WD_ITEM(wd->wind_kph_d, "Wind: %s km/h %s", wc->wind_kph, wc->wind_dir);
     WD_ITEM(wd->pressure_mb_d, "Pressure: %s mb", wc->pressure_mb);
     strncpy(wd->weather_d, wc->weather_str, sizeof wd->weather_d);
 }
