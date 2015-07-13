@@ -65,6 +65,7 @@ SOFTWARE.
 "<ui>" \
 "   <popup name='IndicatorPopup'>" \
 "       <menuitem action='location' />" \
+"       <separator />" \
 "       <menuitem action='weather' />" \
 "       <menuitem action='temp_f' />" \
 "       <menuitem action='temp_c' />" \

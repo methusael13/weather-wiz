@@ -58,10 +58,14 @@ static WeatherDisplayable wd = {
 static void
 app_exit(GtkAction *action, gpointer user_data);
 
+#define GET_ACT(grp, name) \
+    gtk_action_group_get_action(grp, name)
 #define SET_ACT_LABEL(grp, name, lab) \
-    gtk_action_set_label(gtk_action_group_get_action(grp, name), lab)
+    gtk_action_set_label(GET_ACT(grp, name), lab)
 #define SET_ACT_VISIBLE(grp, name, vis) \
-    gtk_action_set_visible(gtk_action_group_get_action(grp, name), vis)
+    gtk_action_set_visible(GET_ACT(grp, name), vis)
+#define SET_ACT_ICON(grp, name, icon) \
+    gtk_action_set_icon_name(GET_ACT(grp, name), icon)
 #define SET_ACT_VISIBLE_COMBO(grp, name1, vis1, name2, vis2) \
     SET_ACT_VISIBLE(grp, name1, vis1); \
     SET_ACT_VISIBLE(grp, name2, vis2);
@@ -94,6 +98,7 @@ app_update_weather_display(GtkActionGroup *group, WeatherConditions *wc,
     SET_ACT_LABEL(group, "wind_mph", wd->wind_mph_d);
     SET_ACT_LABEL(group, "wind_kph", wd->wind_kph_d);
     SET_ACT_LABEL(group, "pressure_mb", wd->pressure_mb_d);
+    SET_ACT_ICON(group, "weather", APP_ICON_SET[wc->weather_id]);
 
     SET_ACT_VISIBLE_COMBO(group, "temp_f", wd->use_temp_f,
                          "temp_c", !wd->use_temp_f);
@@ -178,6 +183,7 @@ app_activate_indicator(void) {
     gtk_ui_manager_insert_action_group(global_ui_man, weather_info_group, 0);
     gtk_ui_manager_insert_action_group(global_ui_man, ac_grp,
                                        G_N_ELEMENTS(weather_info_actions));
+    gtk_action_set_always_show_image(GET_ACT(weather_info_group, "weather"), TRUE);
 
     GError *error = NULL;
     if (!gtk_ui_manager_add_ui_from_string(global_ui_man,

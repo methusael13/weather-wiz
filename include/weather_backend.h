@@ -43,7 +43,7 @@ typedef enum W_STATUS {
     WEATHER_SHOWERS_SCATTERED,  // chancerain
     WEATHER_SNOW,               // snow, flurries, slit, nt_snow, nt_flurries, nt_slit
     WEATHER_STORM,              // tstorms, nt_tstorms
-    WEATHER_UNKNOWN				// [default binding]
+    WEATHER_UNKNOWN             // [default binding]
 } WEATHER_STATUS;
 
 #ifdef _REQUIRE_WEATHER_DEFINITIONS_
