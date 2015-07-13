@@ -87,7 +87,7 @@ timer_thread_process(void *arg) {
     /* Keep the thread alive until timer has stopped,
      * and sleep, so as to prevent blocking CPU context switches */
     while (get_timer_status(timer) != TIMER_STOPPED)
-        usleep(5);
+        usleep(200);
     return NULL;
 }
 

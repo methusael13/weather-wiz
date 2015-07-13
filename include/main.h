@@ -72,6 +72,7 @@ SOFTWARE.
 "       <menuitem action='wind_mph' />" \
 "       <menuitem action='wind_kph' />" \
 "       <menuitem action='pressure_mb' />" \
+"       <separator />" \
 "       <menuitem action='pref' />" \
 "       <menuitem action='about' />" \
 "       <menuitem action='quit' />" \

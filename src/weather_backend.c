@@ -27,9 +27,12 @@ SOFTWARE.
 */
 
 #include <pwd.h>
+#include <time.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
+#include <jansson.h>
+#include <curl/curl.h>
 #include <sys/types.h>
 #include "util.h"
 #include "event_log.h"
@@ -38,10 +41,6 @@ SOFTWARE.
 
 #define _REQUIRE_WEATHER_DEFINITIONS_
 #include "weather_backend.h"
-
-#ifdef _REQUIRE_WEATHER_DEFINITIONS_
-#include <time.h>
-#endif
 
 #define REQUEST_INTERVAL 3600
 #define TEMP_LOC_FILE "w_geo_loc.json"
@@ -87,14 +86,15 @@ SOFTWARE.
 #define W_SET_WEATR_DATA_AVAILABLE(flag) \
     W_SET_BIT_FLAG(flag, W_WEATR_DATA_AVAILABLE, status)
 
-uint8_t status = 0;
-const char *usr_home;
+static uint8_t status = 0;
+static time_t last_update_time;
+static const char *usr_home;
 /* Keep this safe, lest it fall in the hands of the evil */
-const char *AUTH_KEY  = "208c2e7af8134895";
+static const char *AUTH_KEY  = "208c2e7af8134895";
 
-TimerThread *timer;
-WeatherConditions wc;
-GeoIPLocation geo_loc = { .use_zmw = FALSE };
+static TimerThread *timer;
+static WeatherConditions wc;
+static GeoIPLocation geo_loc = { .use_zmw = FALSE };
 
 void (*weather_update_callback)(GeoIPLocation *, WeatherConditions *);
 
@@ -103,12 +103,12 @@ struct response_data {
     char data[BUFFER_SZ];
 };
 
-char *geoip_text = NULL;
-char *weather_text = NULL;
-char loc_file_path[PATH_SIZE];
-char weather_file_path[PATH_SIZE];
-char loc_url[URL_SIZE];
-char weather_url[URL_SIZE];
+static char *geoip_text = NULL;
+static char *weather_text = NULL;
+static char loc_file_path[PATH_SIZE];
+static char weather_file_path[PATH_SIZE];
+static char loc_url[URL_SIZE];
+static char weather_url[URL_SIZE];
 
 static int
 parse_weather_json_data(const char *, WeatherConditions *);
@@ -151,14 +151,18 @@ w_request(const char *url, char *dest) {
 
     curl_status = curl_easy_perform(curl);
     if (curl_status != 0) {
+#ifdef __W_DEBUG__
         LOG_ERROR("Unable to fetch data from internet");
         LOG_ARG_ERROR("%s", curl_easy_strerror(curl_status));
+#endif
         goto err;
     }
 
     curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_status);
     if (http_status != HTTP_STATUS_OK) {
+#ifdef __W_DEBUG__
         LOG_ARG_ERROR("Server replied with error code: %d", http_status);
+#endif
         goto err;
     }
 
@@ -194,19 +198,18 @@ w_init_geoip_loc(GeoIPLocation *geo) {
         return FALSE;
     }
 
-    // Update location info
+    /* Update location info */
     if (online) {
         parse_location_json_data(geoip_text, geo);
 
-        // Determine whether to use zmw
-        // Try first with default weather url
+        /* Determine whether to use zmw
+           Try first with default weather url */
         W_BUILD_WEATHER_URL_CC(weather_url, AUTH_KEY,
             geo->country, geo->city);
         if (w_request(weather_url, weather_text)) {
-#define SUPPRESS_LOG
             if (!parse_weather_json_data(weather_text, &wc)) {
-                // Unable to parse response json
-                // Should have zmw data
+                /* Unable to parse response json
+                   Should have zmw data */
                 json_t *root, *res;
                 json_error_t j_error;
 
@@ -219,7 +222,6 @@ w_init_geoip_loc(GeoIPLocation *geo) {
                 geo->use_zmw = TRUE;
                 json_decref(root);
             }
-#undef SUPPRESS_LOG
         }
     }
     W_SET_LOC_DATA_AVAILABLE(TRUE);
@@ -271,12 +273,21 @@ w_refresh_weather_data(void) {
         return;
     }
 
-    if (w_load_weather_data_online(&wc) || w_load_weather_data_cache(&wc)) {
-        weather_update_callback(&geo_loc, &wc);
-    } else {
+    if (!W_IS_WEATR_DATA_AVAILABLE(status))
+        if (w_load_weather_data_cache(&wc))
+            weather_update_callback(&geo_loc, &wc);
+
+    time_t curr_t = time((time_t *)0);
+    if (difftime(curr_t, last_update_time) > REQUEST_INTERVAL) {
+        if (w_load_weather_data_online(&wc)) {
+            last_update_time = curr_t;
+            weather_update_callback(&geo_loc, &wc);
+        }
+    }
+
+    if (!W_IS_WEATR_DATA_AVAILABLE(status))
         LOG_WARNING("Failed to update weather. "
             "Check internet connection");
-    }
 }
 
 int
@@ -295,11 +306,17 @@ w_start_weather_service(void) {
     usr_home = get_usr_home_dir();
     INIT_LOC_FILE_PATH(loc_file_path, usr_home);
     INIT_WEATHER_FILE_PATH(weather_file_path, usr_home);
-    
+
     geoip_text = (char *) malloc(BUFFER_SZ);
     weather_text = (char *) malloc(BUFFER_SZ);
 
-    timer = timer_thread_create(1, REQUEST_INTERVAL, w_refresh_weather_data);
+    struct tm init_t = {
+        .tm_sec = 0, .tm_min = 0, .tm_hour = 0,
+        .tm_mday = 1, .tm_mon = 0, .tm_year = 110
+    };
+    last_update_time = mktime(&init_t);
+
+    timer = timer_thread_create(1, 5, w_refresh_weather_data);
     timer_thread_start(timer);
     W_SET_SERVICE_STARTED(TRUE);
 
@@ -420,9 +437,7 @@ parse_weather_json_data(const char *str, WeatherConditions *wc) {
     return TRUE;
 
     err:
-#ifndef SUPPRESS_LOG
         LOG_ERROR("Malformed json text. Unable to parse data");
-#endif
         json_decref(root);
         return FALSE;
 }

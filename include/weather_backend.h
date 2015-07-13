@@ -29,10 +29,6 @@ SOFTWARE.
 #ifndef _WEATHER_BACKEND_
 #define _WEATHER_BACKEND_
 
-#include <stdlib.h>
-#include <jansson.h>
-#include <curl/curl.h>
-
 typedef enum W_STATUS {
     WEATHER_CLEAR,              // clear, sunny, mostlysunny
     WEATHER_CLEAR_NIGHT,        // nt_clear, nt_sunny, nt_mostlysunny
