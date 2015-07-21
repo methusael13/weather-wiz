@@ -39,6 +39,7 @@ SOFTWARE.
 #include "timer_thread.h"
 #include "json_util.h"
 
+#define _REQUIRE_W_CONDITIONS_STR_
 #define _REQUIRE_WEATHER_DEFINITIONS_
 #include "weather_backend.h"
 
@@ -49,16 +50,11 @@ SOFTWARE.
 #define PATH_FORMAT "%s/.cache/%s"
 #define LOC_URL_FORMAT \
     "http://api.wunderground.com/api/%s/geolookup/q/autoip.json"
-#define WEATHER_URL_FORMAT_CC \
-    "http://api.wunderground.com/api/%s/geolookup/conditions/q/%s/%s.json"
 #define WEATHER_URL_FORMAT_ZMW \
-    "http://api.wunderground.com/api/%s/geolookup/conditions/q/zmw:%s.json"
+    "http://api.wunderground.com/api/%s/conditions%s.json"
 
 #define W_BUILD_LOCATION_URL(str, auth_key) \
     do { snprintf(str, sizeof(str), LOC_URL_FORMAT, auth_key); } \
-    while (0);
-#define W_BUILD_WEATHER_URL_CC(str, auth_key, country, city) \
-    do { snprintf(str, sizeof(str), WEATHER_URL_FORMAT_CC, auth_key, country, city); } \
     while (0);
 #define W_BUILD_WEATHER_URL_ZMW(str, auth_key, zmw) \
     do { snprintf(str, sizeof(str), WEATHER_URL_FORMAT_ZMW, auth_key, zmw); } \
@@ -94,7 +90,7 @@ static const char *AUTH_KEY  = "208c2e7af8134895";
 
 static TimerThread *timer;
 static WeatherConditions wc;
-static GeoIPLocation geo_loc = { .use_zmw = FALSE };
+static GeoIPLocation geo_loc;
 
 void (*weather_update_callback)(GeoIPLocation *, WeatherConditions *);
 
@@ -199,43 +195,16 @@ w_init_geoip_loc(GeoIPLocation *geo) {
     }
 
     /* Update location info */
-    if (online) {
+    if (online)
         parse_location_json_data(geoip_text, geo);
 
-        /* Determine whether to use zmw
-           Try first with default weather url */
-        W_BUILD_WEATHER_URL_CC(weather_url, AUTH_KEY,
-            geo->country, geo->city);
-        if (w_request(weather_url, weather_text)) {
-            if (!parse_weather_json_data(weather_text, &wc)) {
-                /* Unable to parse response json
-                   Should have zmw data */
-                json_t *root, *res;
-                json_error_t j_error;
-
-                root = json_loads(weather_text, 0, &j_error);
-                res = json_get_leaf_object(root, "response.results");
-
-                if (json_is_array(res))
-                    res = json_array_get(res, 0);
-                json_load_data_string(res, "zmw", geo->zmw, sizeof geo->zmw);
-                geo->use_zmw = TRUE;
-                json_decref(root);
-            }
-        }
-    }
     W_SET_LOC_DATA_AVAILABLE(TRUE);
     return TRUE;
 }
 
 static int
 w_load_weather_data_online(WeatherConditions *wc) {
-    if (geo_loc.use_zmw) {
-        W_BUILD_WEATHER_URL_ZMW(weather_url, AUTH_KEY, geo_loc.zmw);
-    } else {
-        W_BUILD_WEATHER_URL_CC(weather_url, AUTH_KEY,
-            geo_loc.country, geo_loc.city);
-    }
+    W_BUILD_WEATHER_URL_ZMW(weather_url, AUTH_KEY, geo_loc.zmw);
 
     if (w_request(weather_url, weather_text)) {
         parse_weather_json_data(weather_text, wc);
@@ -431,6 +400,11 @@ parse_weather_json_data(const char *str, WeatherConditions *wc) {
         weather_const_id_day[icon - weather_const_str] :
         weather_const_id_nt[icon - weather_const_str],
         wc->weather_id = WEATHER_UNKNOWN);
+
+#ifdef _REQUIRE_W_CONDITIONS_STR_
+    if (!strlen(wc->weather_str))
+        strncpy(wc->weather_str, W_CONDITIONS_STR(wc->weather_id), sizeof wc->weather_str);
+#endif
 #endif
 
     json_decref(root);
@@ -464,6 +438,10 @@ parse_location_json_data(const char *str, GeoIPLocation *loc) {
 
     status = json_load_data_string(root, "location.city",
         loc->city, sizeof loc->city);
+    CHECK_REF(status, err);
+
+    status = json_load_data_string(root, "location.l",
+        loc->zmw, sizeof loc->zmw);
     CHECK_REF(status, err);
 
     json_decref(root);

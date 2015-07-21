@@ -44,6 +44,8 @@ _BEGIN_ICON_SET_DECL
 _END_ARR_DECL
 
 static GtkWidget *window;
+static GtkWidget *weather_icon;
+static GtkWidget *weather_item;
 static GtkUIManager *global_ui_man;
 static AppIndicator *global_app_ind;
 static GtkActionGroup *weather_info_group;
@@ -69,6 +71,13 @@ app_exit(GtkAction *action, gpointer user_data);
 #define SET_ACT_VISIBLE_COMBO(grp, name1, vis1, name2, vis2) \
     SET_ACT_VISIBLE(grp, name1, vis1); \
     SET_ACT_VISIBLE(grp, name2, vis2);
+#define UPDATE_ACTION(wc, grp, name, lab) \
+    if (strlen(wc)) { \
+        SET_ACT_LABEL(grp, name, lab); \
+        SET_ACT_VISIBLE(grp, name, TRUE); \
+    } else { \
+        SET_ACT_VISIBLE(grp, name, FALSE); \
+    }
 
 _BEGIN_ARR_DECL(actions, const GtkActionEntry)
     {"pref", "app-pref", "Preferences", NULL, NULL, NULL},
@@ -98,12 +107,21 @@ app_update_weather_display(GtkActionGroup *group, WeatherConditions *wc,
     SET_ACT_LABEL(group, "wind_mph", wd->wind_mph_d);
     SET_ACT_LABEL(group, "wind_kph", wd->wind_kph_d);
     SET_ACT_LABEL(group, "pressure_mb", wd->pressure_mb_d);
-    SET_ACT_ICON(group, "weather", APP_ICON_SET[wc->weather_id]);
 
-    SET_ACT_VISIBLE_COMBO(group, "temp_f", wd->use_temp_f,
-                         "temp_c", !wd->use_temp_f);
-    SET_ACT_VISIBLE_COMBO(group, "wind_mph", wd->use_wind_mph,
-                         "wind_kph", !wd->use_wind_mph);
+    gtk_image_set_from_icon_name(GTK_IMAGE(weather_icon),
+                                 APP_ICON_SET[wc->weather_id],
+                                 GTK_ICON_SIZE_MENU);
+    gtk_image_menu_item_set_image(GTK_IMAGE_MENU_ITEM(weather_item),
+                                  weather_icon);
+
+    /* The visibility of an item strictly
+     * depends, on the availability of its data */
+    SET_ACT_VISIBLE_COMBO(group, "temp_f", strlen(wc->temp_f) && wd->use_temp_f,
+                         "temp_c", strlen(wc->temp_c) && !wd->use_temp_f);
+    SET_ACT_VISIBLE_COMBO(group, "wind_mph", strlen(wc->wind_mph) && wd->use_wind_mph,
+                         "wind_kph", strlen(wc->wind_kph) && !wd->use_wind_mph);
+    SET_ACT_VISIBLE_COMBO(group, "rel_humidity", strlen(wc->rel_humidity),
+                         "pressure_mb", strlen(wc->pressure_mb));
 
     if (wd->display_label)
         app_indicator_set_label(global_app_ind, wd->use_temp_f ?
@@ -133,6 +151,7 @@ app_exit(GtkAction *action, gpointer user_data) {
         assert(!W_IS_SERVICE_STARTED(w_get_service_status()));
     }
 
+    gtk_widget_destroy(weather_icon);
     LOG_INFO("Exiting Weather-Wiz...");
     gtk_main_quit();
 }
@@ -198,6 +217,9 @@ app_activate_indicator(void) {
     GtkMenu *menu;
     menu = GTK_MENU(gtk_ui_manager_get_widget(global_ui_man, "/ui/IndicatorPopup"));
     app_initiate_indicator(menu, &global_app_ind);
+
+    weather_icon = gtk_image_new();
+    weather_item = gtk_ui_manager_get_widget(global_ui_man, "/ui/IndicatorPopup/WeatherItem");
 
     g_object_unref(ac_grp);
     g_object_unref(menu);

@@ -88,17 +88,28 @@ typedef enum W_STATUS {
 #define W_STATUS_STR(i) w_status_str[i]
 #endif
 
+#ifdef _REQUIRE_W_CONDITIONS_STR_
+    /* General weather condition phrases */
+    const char *w_conditions_str[] = {
+        "Clear", "Clear", "Cloudy", "Cloudy",
+        "Scattered Clouds", "Scattered Clouds",
+        "Fog", "Haze", "Weather Critical",
+        "Rain", "Chance of Rain", "Snow", "Thunderstorms",
+        "Unknown"
+    };
+#define W_CONDITIONS_STR(i) w_conditions_str[i]
+#endif
+
 #define FARENHEIT_UNIT_STR "°F"
 #define CELSIUS_UNIT_STR "°C"
 
 /* Size definitions for GeoIP and WeatherCond structs */
 #define W_LOC_STR_SIZE 30
-#define W_LOC_ZMW_SIZE 20
+#define W_LOC_ZMW_SIZE 25
 #define W_WIND_DIR_STR_SIZE 10
 #define W_WEATHER_STR_SIZE 40
 
 typedef struct GeoIPLoc {
-    int  use_zmw;
     char city[W_LOC_STR_SIZE];
     char state[W_LOC_STR_SIZE];
     char country[W_LOC_STR_SIZE];
