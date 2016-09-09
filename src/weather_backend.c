@@ -86,7 +86,7 @@ static uint8_t status = 0;
 static time_t last_update_time;
 static const char *usr_home;
 /* Keep this safe, lest it fall in the hands of the evil */
-static const char *AUTH_KEY  = "208c2e7af8134895";
+static const char *AUTH_KEY  = "xxx";
 
 static TimerThread *timer;
 static WeatherConditions wc;
