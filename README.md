@@ -1,4 +1,4 @@
-#Weather Wiz
+# Weather Wiz
 
 Weather Wiz is a weather indicator for Linux, displaying
 local weather info. The indicator resides in the indicator panel
@@ -7,7 +7,7 @@ It is in its initial development stage right now and not all
 of its potential features have been fully implemented yet.
 If you still want to check it out, read the build instructions below.
 
-####Prerequisites for building from source
+#### Prerequisites for building from source
 * libcurl3
 * libcurl4-openssl-dev
 * libgtk2.0-dev
@@ -19,7 +19,7 @@ If you still want to check it out, read the build instructions below.
 Some of these packages already come pre-installed in some Linux distros,
 others can be installed from the distribution repositories.
 
-####Building
+#### Building
 Make sure you have the prerequisites mentioned above.
 Once you've downloaded the zip, open a terminal and `cd` to the directory
 the zip file is located in and enter the following:
